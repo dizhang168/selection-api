@@ -210,7 +210,7 @@
           undefined removeRange(Range range);
           undefined removeAllRanges();
           undefined empty();
-          sequence&lt;StaticRange&gt; getComposedRanges(ShadowRoot... shadowRoots);
+          sequence&lt;StaticRange&gt; getComposedRanges(optional GetComposedRangesOptions options = {});
           undefined collapse(Node? node, optional unsigned long offset = 0);
           undefined setPosition(Node? node, optional unsigned long offset = 0);
           undefined collapseToStart();
@@ -222,6 +222,10 @@
           [CEReactions] undefined deleteFromDocument();
           boolean containsNode(Node node, optional boolean allowPartialContainment = false);
           stringifier;
+        };
+
+        dictionary GetComposedRangesOptions {
+          sequence<ShadowRoot> shadowRoots = [];
         };
       </pre>
       <dl>
