@@ -415,7 +415,7 @@
             <li>While <var>startNode</var> is a [=node=],
             <var>startNode</var>'s [=tree/root=] is a [=shadow root=], and
             <var>startNode</var>'s [=tree/root=] is not a [=shadow-including
-            inclusive ancestor=] of any of <var>shadowRoots</var>, repeat these
+            inclusive ancestor=] of any of <var>options.shadowRoots</var>, repeat these
             steps:
               <ol>
                 <li>Set <var>startOffset</var> to [=tree/index=] of
@@ -433,7 +433,7 @@
             <li>While <var>endNode</var> is a [=node=], <var>endNode</var>'s
             [=tree/root=] is a [=shadow root=], and <var>endNode</var>'s
             [=tree/root=] is not a [=shadow-including inclusive ancestor=] of
-            any of <var>shadowRoots</var>, repeat these steps:
+            any of <var>options.shadowRoots</var>, repeat these steps:
               <ol>
                 <li>Set <var>endOffset</var> to [=tree/index=] of
                 <var>endNode</var>'s [=tree/root=]'s [=host=] plus 1.
