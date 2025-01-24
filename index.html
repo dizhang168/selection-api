@@ -112,7 +112,8 @@
         [=editing hosts=] in the <a>document</a>.
       </p>
       <p>
-        Each <a>selection</a> can be associated with a single <a>range</a>.
+        Each <a>selection</a> can be associated with a single
+        <a href="TODO">composed live range</a> <dfn>range</dfn>.
         When there is no <a>range</a> associated with the <a>selection</a>, the
         selection is <dfn>empty</dfn>. The selection must be initially
         <a>empty</a>.
@@ -127,6 +128,20 @@
         dev do not. We follow Gecko/WebKit, because it lessens the chance of
         getRangeAt(0) throwing.
       </p>
+      <p>To <dfn>reset the range</dfn> of [=this=], given the
+       <a>boundary point</a> <var>start</var> and <a>boundary point</a>
+       <var>end</var>, run these steps:
+      </p>
+      <ol>
+       <li>Let <var>newCachedRange</var> be a new {{Range}} object.</li>
+       <li>[=Range/Set the start=] of <var>newCachedRange</var> to <var>start</var>.
+       </li>
+       <li>[=Range/Set the end=] of <var>newCachedRange</var> to <var>end</var>.</li>
+       <li>Let <var>newRange</var> be a new <a href="TODO">composed live range</a>
+       whose [=Range/start=] is <var>start</var>, [=Range/end=] is <var>end</var>
+       and <var>cached live range</var> is <var>newCachedRange</var>.</li>
+       <li>Set [=this=]'s <a>range</a> to be <var>newRange</var>.</li>
+     </ol>
       <p>
         Once a <a>selection</a> is associated with a given <a>range</a>, it
         must continue to be associated with that same <a>range</a> until this
@@ -167,13 +182,14 @@
         <a>selection</a> must be preserved.
       </p>
       <p>
-        Each <a>selection</a>s also have an <dfn>anchor</dfn> and a
+        Each <a>selection</a> also has an <dfn>anchor</dfn> and a
         <dfn>focus</dfn>. If the <a>selection</a>'s <a>range</a> is null, its
         <a>anchor</a> and <a>focus</a> are both null. If the <a>selection</a>'s
         <a>range</a> is not null and its <a>direction</a> is <a>forwards</a>,
-        its <a>anchor</a> is the <a>range</a>'s [=range/start=], and its
-        <a>focus</a> is the [=range/end=]. Otherwise, its <a>focus</a> is the
-        [=range/start=] and its <a>anchor</a> is the [=range/end=].
+        its <a>anchor</a> is the <a>range</a>'s cached live range's
+        [=range/start=], and its <a>focus</a> is the [=range/end=]. Otherwise,
+        its <a>focus</a> is the [=range/start=] and its <a>anchor</a> is the
+        [=range/end=].
       </p>
       <p class="note">
         <a>anchor</a> and <a>focus</a> of <a>selection</a> need not to be in
@@ -320,7 +336,7 @@
             <var>index</var> is not <code>0</code>, or if [=this=] is
             <a>empty</a> or either <a>focus</a> or <a>anchor</a> is not in the
             [=document tree=]. Otherwise, it must return a reference to (not a
-            copy of) [=this=]'s <a>range</a>.
+            copy of) [=this=]'s <a>range</a>'s cached live range.
           </p>
           <p class="note">
             Thus subsequent calls of this method returns the same <a>range</a>
@@ -345,8 +361,8 @@
             <li>If <code>rangeCount</code> is not <code>0</code>, abort these
             steps.
             </li>
-            <li>Set [=this=]'s range to <var>range</var> by a strong reference
-            (not by making a copy).
+            <li>Set [=this=]'s range's cached live range to <var>range</var> by
+            a strong reference (not by making a copy).
             </li>
           </ol>
           <p class="note">
@@ -379,8 +395,8 @@
         <dd>
           <p>
             The method must make [=this=] <a>empty</a> by disassociating its
-            <a>range</a> if [=this=]'s <a>range</a> is <var>range</var>.
-            Otherwise, it must throw a {{NotFoundError}}.
+            <a>range</a> if [=this=]'s <a>range</a>'s cached live range is
+            <var>range</var>. Otherwise, it must throw a {{NotFoundError}}.
           </p>
         </dd>
         <dt>
@@ -476,13 +492,8 @@
             [=shadow-including inclusive ancestor=] of <var>node</var>, abort
             these steps.
             </li>
-            <li>Otherwise, let <var>newRange</var> be a new <a>range</a>.
-            </li>
-            <li>[=Range/Set the start=] the [=range/start=] and the
-            [=range/end=] of <var>newRange</var> to (<var>node</var>,
-            <var>offset</var>).
-            </li>
-            <li>Set [=this=]'s <a>range</a> to <var>newRange</var>.
+            <li>Otherwise, <a>reset the range</a> with (<var>node</var>,
+            <var>offset</var>) and (<var>node</var>, <var>offset</var>).
             </li>
           </ol>
         </dd>
@@ -500,13 +511,17 @@
         </dt>
         <dd>
           <p>
-            The method must throw {{InvalidStateError}} exception if the
-            [=this=] is <a>empty</a>. Otherwise, it must create a new
-            <a>range</a>, [=Range/set the start=] both its [=range/start=] and
-            [=range/end=] to the [=range/start=] of [=this=]'s <a>range</a>,
-            and then set [=this=]'s <a>range</a> to the newly-created
-            <a>range</a>.
+           The method must follow these steps:
           </p>
+          <ol>
+           <li>If [=this=] is <a>empty</a>, throw an {{InvalidStateError}}
+           exception and abort these steps.
+           </li>
+           <li>Let <var>bp</var> be the [=Range/start=] of [=this=]'s <a>range</a>.
+           </li>
+           <li><a>Reset the range</a> with <var>bp</var> and <var>bp</var>.
+           </li>
+         </ol>
           <p class="note">
             For collapseToStart/End, IE9 mutates the existing range, while
             Firefox 9.0a2 and Chrome 15 dev replace it with a new one. The spec
@@ -518,13 +533,18 @@
           <dfn>collapseToEnd()</dfn> method
         </dt>
         <dd>
-          <p>
-            The method must throw {{InvalidStateError}} exception if the
-            [=this=] is <a>empty</a>. Otherwise, it must create a new
-            <a>range</a>, [=Range/set the start=] both its [=range/start=] and
-            [=range/end=] to the [=range/end=] of [=this=]'s <a>range</a>, and
-            then set [=this=]'s <a>range</a> to the newly-created <a>range</a>.
-          </p>
+         <p>
+          The method must follow these steps:
+         </p>
+         <ol>
+          <li>If [=this=] is <a>empty</a>, throw an {{InvalidStateError}}
+          exception and abort these steps.
+          </li>
+          <li>Let <var>bp</var> be the [=Range/end=] of [=this=]'s <a>range</a>.
+          </li>
+          <li><a>Reset the range</a> with <var>bp</var> and <var>bp</var>.
+          </li>
+        </ol>
         </dd>
         <dt>
           <dfn>extend()</dfn> method
@@ -546,24 +566,18 @@
             <var>newFocus</var> be the <a>boundary point</a> (<var>node</var>,
             <var>offset</var>).
             </li>
-            <li>Let <var>newRange</var> be a new <a>range</a>.
-            </li>
-            <li>If <var>node</var>'s [=tree/root=] is not the same as the
-            [=this=]'s <a>range</a>'s [=tree/root=], [=Range/set the start=]
-            <var>newRange</var>'s [=range/start=] and [=range/end=] to
-            <var>newFocus</var>.
+            <li>If <var>node</var>'s [=tree/root=] is not the same as
+            [=this=]'s <a>range</a>'s [=tree/root=], <a>reset the range</a> with
+            <var>newFocus</var> and <var>newFocus</var>.
             </li>
             <li>Otherwise, if <var>oldAnchor</var> is [=boundary point/before=]
-            or equal to <var>newFocus</var>, [=Range/set the start=]
-            <var>newRange</var>'s [=range/start=] to <var>oldAnchor</var>, then
-            set its [=range/end=] to <var>newFocus</var>.
+            or equal to <var>newFocus</var>, <a>reset the range</a>
+            with <var>oldAnchor</var> and <var>newFocus</var>.
             </li>
-            <li>Otherwise, [=Range/set the start=] <var>newRange</var>'s
-            [=range/start=] to <var>newFocus</var>, then set its [=range/end=]
-            to <var>oldAnchor</var>.
+            <li>Otherwise, <a>reset the range</a> with <var>newFocus</var>
+            and <var>oldAnchor</var>.
             </li>
-            <li>Set [=this=]'s <a>range</a> to <var>newRange</var>.
-            </li>
+
             <li>If <var>newFocus</var> is [=boundary point/before=]
             <var>oldAnchor</var>, set [=this=]'s <a>direction</a> to
             <a>backwards</a>. Otherwise, set it to <a>forwards</a>.
@@ -604,15 +618,10 @@
             <var>focus</var> be the <a>boundary point</a>
             (<var>focusNode</var>, <var>focusOffset</var>).
             </li>
-            <li>Let <var>newRange</var> be a new <a>range</a>.
-            </li>
             <li>If <var>anchor</var> is [=boundary point/before=]
-            <var>focus</var>, [=Range/set the start=] the <var>newRange</var>'s
-            [=range/start=] to <var>anchor</var> and its [=range/end=] to <var>
-              focus</var>. Otherwise, [=Range/set the start=] them to
-              <var>focus</var> and <var>anchor</var> respectively.
-            </li>
-            <li>Set [=this=]'s <a>range</a> to <var>newRange</var>.
+            <var>focus</var>, <a>reset the range</a> with <var>anchor</var> and
+            <var>focus</var>. Otherwise, <a>reset the range</a> with
+            <var>focus</var> and <var>anchor</var>.
             </li>
             <li>If <var>focus</var> is [=boundary point/before=]
             <var>anchor</var>, set [=this=]'s <a>direction</a> to
@@ -634,17 +643,11 @@
             <li>If <var>node</var>'s [=tree/root=] is not the <a>document</a>
             associated with [=this=], abort these steps.
             </li>
-            <li>Let <var>newRange</var> be a new <a>range</a> and
-            <var>childCount</var> be the number of [=tree/children=] of
+            <li>Let <var>childCount</var> be the number of [=tree/children=] of
             <var>node</var>.
             </li>
-            <li>Set <var>newRange</var>'s [=range/start=] to (<var>node</var>,
-            <code>0</code>).
-            </li>
-            <li>Set <var>newRange</var>'s [=range/end=] to (<var>node</var>,
-            <var>childCount</var>).
-            </li>
-            <li>Set [=this=]'s <a>range</a> to <var>newRange</var>.
+            <li><a>Reset the range</a> with (<var>node</var>, <code>0</code>)
+            and (<var>node</var>, <var>childCount</var>).
             </li>
             <li>Set [=this=]'s <a>direction</a> to <var>forwards</var>.
             </li>
